@@ -260,119 +260,165 @@ class _AppEntryGateState extends State<AppEntryGate> {
       );
     }
 
-    // Onboarding Gate Screen
+    // Onboarding Gate Screen with Stunning Animations & Google Logo
     return Scaffold(
       backgroundColor: const Color(0xFF000000),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Spacer(),
-              // Brand Logo Icon
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(44),
-                  child: Image.asset(
-                    'assets/logo.jpg',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(Icons.shield_rounded, color: Colors.white, size: 40),
+        child: TweenAnimationBuilder<double>(
+          tween: Tween(begin: 0.0, end: 1.0),
+          duration: const Duration(milliseconds: 700),
+          curve: Curves.easeOutCubic,
+          builder: (context, animValue, child) {
+            return Opacity(
+              opacity: animValue,
+              child: Transform.translate(
+                offset: Offset(0, 20 * (1 - animValue)),
+                child: child,
+              ),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Spacer(),
+                // Animated Glowing Brand Logo Icon
+                Container(
+                  width: 96,
+                  height: 96,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.white.withOpacity(0.12),
+                        blurRadius: 24,
+                        spreadRadius: 4,
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(48),
+                    child: Image.asset(
+                      'assets/logo.jpg',
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.shield_rounded, color: Colors.white, size: 44),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 28),
 
-              const Text(
-                "PeacePlus AI",
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              const Text(
-                "Your deeply supportive, comforting, and compassionate counseling companion for peace and forgiveness.",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: Color(0xFFA3A3A3),
-                ),
-              ),
-
-              const Spacer(),
-
-              // Button 1: Continue with Google
-              InkWell(
-                onTap: _continueWithGoogle,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
+                const Text(
+                  "PeacePlus AI",
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.account_circle_rounded, color: Colors.black, size: 22),
-                      SizedBox(width: 12),
-                      Text(
-                        "Continue with Google",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.black,
-                        ),
-                      ),
-                    ],
+                    letterSpacing: -0.5,
                   ),
                 ),
-              ),
-              const SizedBox(height: 14),
+                const SizedBox(height: 12),
 
-              // Button 2: Continue without login (Guest Mode)
-              InkWell(
-                onTap: _continueWithoutLogin,
-                borderRadius: BorderRadius.circular(16),
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF161616),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFF333333), width: 1),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-                      SizedBox(width: 12),
-                      Text(
-                        "Continue without login",
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
+                const Text(
+                  "Your deeply supportive, comforting, and compassionate counseling companion for peace and forgiveness.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.55,
+                    color: Color(0xFFA3A3A3),
                   ),
                 ),
-              ),
-              const SizedBox(height: 20),
-            ],
+
+                const Spacer(),
+
+                // Button 1: Continue with Google (with Google 4-Color Logo)
+                InkWell(
+                  onTap: _continueWithGoogle,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // Google Brand Logo Mark
+                        Container(
+                          width: 22,
+                          height: 22,
+                          decoration: const BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white,
+                          ),
+                          child: Center(
+                            child: RichText(
+                              text: const TextSpan(
+                                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                                children: [
+                                  TextSpan(text: 'G', style: TextStyle(color: Color(0xFF4285F4))),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Text(
+                          "Continue with Google",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                // Button 2: Continue without login (Guest Mode)
+                InkWell(
+                  onTap: _continueWithoutLogin,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF141414),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF2E2E2E), width: 1),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+                        SizedBox(width: 12),
+                        Text(
+                          "Continue without login",
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
@@ -461,16 +507,13 @@ class _ChatGPTMainScreenState extends State<ChatGPTMainScreen> {
       try {
         final List<dynamic> decoded = jsonDecode(rawHistory);
         _chatSessions = decoded.map((s) => ChatSession.fromJson(s)).toList();
+        // Remove empty sessions that have no user messages
+        _chatSessions.removeWhere((s) => !s.messages.any((m) => m.isUser));
       } catch (_) {}
     }
 
-    if (_chatSessions.isNotEmpty) {
-      _currentSessionId = _chatSessions.first.id;
-      _messages = List.from(_chatSessions.first.messages);
-    } else {
-      _initNewSession();
-    }
-
+    // Always start with a fresh new chat whenever opening the app
+    _initNewSession();
     setState(() {});
   }
 
@@ -604,6 +647,7 @@ class _ChatGPTMainScreenState extends State<ChatGPTMainScreen> {
     if (_forceOfflineMode) {
       await _streamLocalComfortingResponse(aiMsgId, text);
     } else {
+      bool streamCompleted = false;
       try {
         final streamUrl = _apiUrl.replaceAll("/forgiveness", "/forgiveness/stream");
         final request = http.Request('POST', Uri.parse(streamUrl));
@@ -615,40 +659,70 @@ class _ChatGPTMainScreenState extends State<ChatGPTMainScreen> {
         });
 
         final client = http.Client();
-        final response = await client.send(request).timeout(const Duration(seconds: 12));
+        final response = await client.send(request).timeout(const Duration(seconds: 14));
 
         if (response.statusCode == 200) {
           StringBuffer currentText = StringBuffer();
-          response.stream.transform(utf8.decoder).listen(
-            (chunk) {
-              final lines = chunk.split("\n");
-              for (var line in lines) {
-                if (line.startsWith("data: ")) {
-                  final dataStr = line.substring(6).trim();
-                  if (dataStr == "[DONE]") break;
-                  try {
-                    final jsonMap = jsonDecode(dataStr);
-                    if (jsonMap.containsKey('token')) {
-                      currentText.write(jsonMap['token']);
-                      _updateMsgText(aiMsgId, currentText.toString());
-                    }
-                  } catch (_) {}
+          await for (var chunk in response.stream.transform(utf8.decoder)) {
+            final lines = chunk.split("\n");
+            for (var line in lines) {
+              if (line.startsWith("data: ")) {
+                final dataStr = line.substring(6).trim();
+                if (dataStr == "[DONE]") {
+                  streamCompleted = true;
+                  break;
                 }
+                try {
+                  final jsonMap = jsonDecode(dataStr);
+                  if (jsonMap.containsKey('token')) {
+                    currentText.write(jsonMap['token']);
+                    _updateMsgText(aiMsgId, currentText.toString());
+                  }
+                } catch (_) {}
               }
-            },
-            onDone: () {
-              _finishStreaming(aiMsgId);
-              client.close();
-            },
-            onError: (e) {
-              _streamLocalComfortingResponse(aiMsgId, text);
-              client.close();
-            },
-          );
-        } else {
-          await _streamLocalComfortingResponse(aiMsgId, text);
+            }
+          }
+          if (currentText.isNotEmpty) {
+            streamCompleted = true;
+            _finishStreaming(aiMsgId);
+          }
+          client.close();
         }
       } catch (e) {
+        streamCompleted = false;
+      }
+
+      if (!streamCompleted) {
+        // Direct cloud POST fallback
+        try {
+          final directUrl = _apiUrl.contains("/stream") ? _apiUrl.replaceAll("/stream", "") : _apiUrl;
+          final resp = await http.post(
+            Uri.parse(directUrl),
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "conflict": text,
+              "religion": _selectedReligion,
+              "perspective": _selectedPerspective,
+            }),
+          ).timeout(const Duration(seconds: 10));
+
+          if (resp.statusCode == 200) {
+            final data = jsonDecode(resp.body);
+            final advice = data['advice'] ?? '';
+            if (advice.toString().isNotEmpty) {
+              StringBuffer buf = StringBuffer();
+              for (var w in advice.toString().split(" ")) {
+                buf.write("$w ");
+                _updateMsgText(aiMsgId, buf.toString());
+                await Future.delayed(const Duration(milliseconds: 18));
+              }
+              _finishStreaming(aiMsgId);
+              return;
+            }
+          }
+        } catch (_) {}
+
+        // Local dynamic fallback
         await _streamLocalComfortingResponse(aiMsgId, text);
       }
     }
@@ -1115,7 +1189,7 @@ class _ChatGPTMainScreenState extends State<ChatGPTMainScreen> {
 
   Widget _buildSpaciousChatGPTDrawer() {
     return Drawer(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF000000),
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1124,7 +1198,7 @@ class _ChatGPTMainScreenState extends State<ChatGPTMainScreen> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: const BoxDecoration(
-                border: Border(bottom: BorderSide(color: Color(0xFF1E293B))),
+                border: Border(bottom: BorderSide(color: Color(0xFF1E1E1E))),
               ),
               child: Row(
                 children: [
