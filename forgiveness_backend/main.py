@@ -35,29 +35,54 @@ async def get_forgiveness_advice(request: ConflictRequest):
     if not conflict:
         raise HTTPException(status_code=400, detail="Conflict description cannot be empty.")
 
-    api_key = os.getenv("OPENAI_API_KEY")
+    openrouter_key = os.getenv("OPENROUTER_API_KEY")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    api_key = openrouter_key or openai_key
 
     if api_key:
         try:
-            import openai
-            openai.api_key = api_key
+            import requests
+            model = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
             prompt = (
                 f"You are a compassionate PeacePlus AI Counselor.\n"
                 f"Situation: '{conflict}'\n"
                 f"Perspective: {perspective}\n"
                 f"Tradition/Framework: {religion}\n\n"
-                f"Provide advice structured in JSON format with fields: 'reflection', 'action_steps' (list), 'scripture', 'apology_draft'."
+                f"Provide advice structured with clear sections for reflection, action_steps, scripture/wisdom, and apology_draft."
             )
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=400,
-                temperature=0.7,
-            )
-            raw_text = response['choices'][0]['message']['content']
-            return {"advice": raw_text, "source": "OpenAI"}
+
+            headers = {
+                "Authorization": f"Bearer {api_key}",
+                "HTTP-Referer": "https://peaceplus-ai.onrender.com",
+                "X-Title": "PeacePlus AI",
+                "Content-Type": "application/json",
+            }
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": "You are an empathetic peace and forgiveness counselor."},
+                    {"role": "user", "content": prompt}
+                ],
+                "max_tokens": 500,
+                "temperature": 0.7
+            }
+
+            resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=15)
+            if resp.status_code == 200:
+                res_data = resp.json()
+                raw_text = res_data['choices'][0]['message']['content']
+                return {
+                    "status": "success",
+                    "conflict": conflict,
+                    "religion": religion,
+                    "perspective": perspective,
+                    "advice": raw_text,
+                    "source": f"OpenRouter ({model})"
+                }
+            else:
+                print(f"OpenRouter API returned status code {resp.status_code}: {resp.text}")
         except Exception as e:
-            print(f"OpenAI API call failed: {e}. Falling back to PeacePlus Rule Engine.")
+            print(f"OpenRouter API call failed: {e}. Falling back to PeacePlus Rule Engine.")
 
     # Fallback Intelligent Forgiveness Recommendation Engine
     advice_payload = generate_rule_based_advice(conflict, religion, perspective)
