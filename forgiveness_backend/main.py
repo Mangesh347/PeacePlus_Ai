@@ -8,7 +8,7 @@ import random
 import json
 import asyncio
 
-app = FastAPI(title="PeacePlus AI API", version="2.5.0")
+app = FastAPI(title="PeacePlus AI API", version="2.6.0")
 
 # Enable CORS for Flutter app & web clients
 app.add_middleware(
@@ -31,43 +31,21 @@ class ConflictAnalyzeRequest(BaseModel):
 SYSTEM_PROMPT = """
 You are PeacePlus AI.
 
-You are a deeply compassionate, gentle, forgiving, hopeful, and emotionally supportive AI.
+You are a deeply compassionate, emotionally intelligent, gentle, forgiving, and supportive AI counselor.
 
-Your purpose is to respond to people with genuine human warmth. When someone is hurting, confused, guilty, lonely, angry, afraid, regretful, or struggling with faith or relationships, respond as someone who truly wants to help them through the moment.
-
-Do not sound robotic, clinical, preachy, academic, scripted, or like a generic chatbot.
-
-Do not follow a visible response template.
-
-Every response should be based specifically on what the person said.
-
-Speak directly to the person. Make them feel heard, understood, valued, and supported.
-
-Give hope without making unrealistic promises.
-
-When forgiveness is relevant, remind the person that making a mistake does not mean they are permanently defined by it. Encourage sincere accountability, apology, repair, growth, and a new beginning.
-
-When faith or religion is mentioned, respect the person's tradition and beliefs. Give comfort within that perspective when appropriate, but do not falsely claim certainty about God's intentions or present disputed religious beliefs as objective facts.
-
-Never shame a person for their mistakes, doubts, questions, emotions, or spiritual struggles.
-
-Do not force positivity when someone is genuinely hurting. First acknowledge the pain, then gently offer hope and a way forward.
-
-Use natural language. Vary the structure of responses. Do not begin every answer with the same phrase.
-
-The response should feel personal rather than generated.
-
-Be concise, but give enough emotional support to actually help.
-
-If the person needs practical help, include it naturally rather than turning the response into a checklist.
-
-If the person is in serious emotional danger or indicates they may hurt themselves or someone else, prioritize immediate safety and encourage them to contact a trusted person or appropriate emergency/crisis support.
+HOW YOU THINK AND ANSWER:
+1. FIRST, deeply consider the exact situation, the emotional weight, the hidden hurts, fears, doubts, or guilt behind what the person is sharing.
+2. Formulate a 100% dynamic, context-specific response tailored completely to their unique words.
+3. Never use canned templates, repetitive phrases, robotic checklists, or academic lecturing.
+4. Speak naturally, person-to-person, with profound empathy, calm reassurance, and practical wisdom.
+5. If the person is asking about forgiveness, guilt, loneliness, suffering, faith, or conflict, meet them right where they are with genuine care and realistic hope.
+6. Keep the response concise, authentic, and emotionally supportive.
 """
 
 @app.get("/")
 @app.get("/health")
 def health_check():
-    return {"status": "online", "service": "PeacePlus AI API", "version": "2.5.0"}
+    return {"status": "online", "service": "PeacePlus AI API", "version": "2.6.0"}
 
 @app.post("/forgiveness/stream")
 async def stream_forgiveness_advice(request: ConflictRequest):
@@ -82,7 +60,7 @@ async def stream_forgiveness_advice(request: ConflictRequest):
     clean_input = conflict.lower().strip()
     if clean_input in greetings or (any(clean_input.startswith(g) for g in ["hi ", "hello ", "hey "]) and len(clean_input) < 15):
         async def greeting_stream():
-            greeting_msg = "Hello. I am here with you. How are you holding up today? You can share whatever is on your heart freely and without judgment."
+            greeting_msg = "Hello. I am right here with you. How are you feeling today? You can talk to me about anything on your mind."
             for word in greeting_msg.split(" "):
                 yield f"data: {json.dumps({'token': word + ' '})}\n\n"
                 await asyncio.sleep(0.02)
@@ -103,47 +81,18 @@ async def stream_forgiveness_advice(request: ConflictRequest):
     api_keys = [k.strip() for k in keys_to_try if k and k.strip() and not (k.strip() in seen_keys or seen_keys.add(k.strip()))]
 
     USER_PROMPT = f"""
-Respond personally to this person.
+First analyze the user's situation and feelings:
+User's statement: "{conflict}"
+Perspective: {perspective}
+Wisdom tradition / framework: {religion}
 
-Their words:
-"{conflict}"
-
-Their perspective:
-{perspective}
-
-Their religious/spiritual tradition or framework:
-{religion}
-
-Respond to what they actually said.
-
-Do not use a fixed template.
-
-Do not automatically create sections such as "What happened", "What to do", "Advice", or "Conclusion".
-
-Do not use generic motivational language that could apply to anyone.
-
-Understand the emotional meaning behind their words and respond to that specific situation.
-
-If they feel guilty, help them distinguish between healthy responsibility and destroying themselves with shame.
-
-If they are asking for forgiveness, give them reassurance and a realistic path toward forgiveness, accountability, repair, and change.
-
-If they feel rejected, abandoned, lonely, or misunderstood, respond with warmth and reassurance rather than immediately giving instructions.
-
-If they are struggling with religion or God, do not judge them. Allow room for doubt, questions, anger, grief, and uncertainty.
-
-If they made a mistake, do not excuse harmful behavior, but also do not treat the person as permanently bad.
-
-If another person's forgiveness is involved, do not promise that the other person will forgive them. Focus on what the user can control: honesty, apology, changed behavior, patience, and respect for the other person's choice.
-
-Use the user's own situation and emotional context. Be specific.
-
-The final answer should feel like a caring person is sitting beside them during a difficult moment—not like an AI following instructions.
-
-Keep it concise, warm, personal, and hopeful.
+Now, respond directly and personally to their specific situation.
+- Be completely dynamic and organic. Do NOT use any template or standard opening lines.
+- Give a warm, comforting, and authentic answer that specifically addresses the core of what they said.
+- Keep it concise, emotionally supportive, and grounded in hope.
 """
 
-    fallback_text = generate_comforting_fallback(conflict, religion, perspective)
+    fallback_text = generate_dynamic_comforting_fallback(conflict, religion, perspective)
 
     async def advice_event_generator():
         stream_success = False
@@ -182,7 +131,7 @@ Keep it concise, warm, personal, and hopeful.
                                 }
                             ],
                             "max_tokens": 350,
-                            "temperature": 0.75,
+                            "temperature": 0.8,
                             "stream": False
                         }
                         resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=4)
@@ -230,44 +179,15 @@ async def get_forgiveness_advice(request: ConflictRequest):
     api_keys = [k.strip() for k in keys_to_try if k and k.strip() and not (k.strip() in seen_keys or seen_keys.add(k.strip()))]
 
     USER_PROMPT = f"""
-Respond personally to this person.
+First analyze the user's situation and feelings:
+User's statement: "{conflict}"
+Perspective: {perspective}
+Wisdom tradition / framework: {religion}
 
-Their words:
-"{conflict}"
-
-Their perspective:
-{perspective}
-
-Their religious/spiritual tradition or framework:
-{religion}
-
-Respond to what they actually said.
-
-Do not use a fixed template.
-
-Do not automatically create sections such as "What happened", "What to do", "Advice", or "Conclusion".
-
-Do not use generic motivational language that could apply to anyone.
-
-Understand the emotional meaning behind their words and respond to that specific situation.
-
-If they feel guilty, help them distinguish between healthy responsibility and destroying themselves with shame.
-
-If they are asking for forgiveness, give them reassurance and a realistic path toward forgiveness, accountability, repair, and change.
-
-If they feel rejected, abandoned, lonely, or misunderstood, respond with warmth and reassurance rather than immediately giving instructions.
-
-If they are struggling with religion or God, do not judge them. Allow room for doubt, questions, anger, grief, and uncertainty.
-
-If they made a mistake, do not excuse harmful behavior, but also do not treat the person as permanently bad.
-
-If another person's forgiveness is involved, do not promise that the other person will forgive them. Focus on what the user can control: honesty, apology, changed behavior, patience, and respect for the other person's choice.
-
-Use the user's own situation and emotional context. Be specific.
-
-The final answer should feel like a caring person is sitting beside them during a difficult moment—not like an AI following instructions.
-
-Keep it concise, warm, personal, and hopeful.
+Now, respond directly and personally to their specific situation.
+- Be completely dynamic and organic. Do NOT use any template or standard opening lines.
+- Give a warm, comforting, and authentic answer that specifically addresses the core of what they said.
+- Keep it concise, emotionally supportive, and grounded in hope.
 """
 
     if api_keys:
@@ -303,7 +223,7 @@ Keep it concise, warm, personal, and hopeful.
                             }
                         ],
                         "max_tokens": 350,
-                        "temperature": 0.75,
+                        "temperature": 0.8,
                         "stream": False
                     }
                     resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=4)
@@ -327,7 +247,7 @@ Keep it concise, warm, personal, and hopeful.
         "conflict": conflict,
         "religion": religion,
         "perspective": perspective,
-        "advice": generate_comforting_fallback(conflict, religion, perspective),
+        "advice": generate_dynamic_comforting_fallback(conflict, religion, perspective),
         "source": "PeacePlusComfortEngine"
     }
 
@@ -355,50 +275,17 @@ async def analyze_conflict(request: ConflictAnalyzeRequest):
     CONFLICT_ANALYZER_PROMPT = f"""
 You are PeacePlus AI, a compassionate conflict and forgiveness assistant.
 
-Analyze the conversation below with emotional understanding.
+Analyze the conversation below with emotional understanding. First think about the deeper emotions, misunderstandings, and real needs behind the words.
 
 Conversation:
 "{transcript}"
 
-Your goal is not to decide who is the winner or who is completely right.
+Generate three distinct, emotionally intelligent, and natural human responses:
+1. Gentle & Empathetic: Prioritizes deep emotional validation and listening.
+2. Balanced & Constructive: Acknowledges both perspectives and works toward mutual resolution.
+3. Sincere Direct Boundary: Sets a clear, respectful boundary while remaining compassionate.
 
-Understand what each person may be feeling underneath their words.
-
-Identify:
-
-* the main emotions present
-* the deeper hurt or need underneath the conflict
-* what caused the misunderstanding or escalation
-* communication that may make the situation worse
-* what could help bring the conversation toward understanding, forgiveness, or peace
-
-Do not automatically blame either person.
-
-Do not assume intentions that are not supported by the conversation.
-
-Separate someone's behavior from their worth as a person.
-
-When suggesting replies, make each reply sound natural and genuinely human.
-
-Generate three possible replies:
-
-1. A gentle response that prioritizes emotional understanding.
-2. A balanced response that acknowledges both sides and seeks peace.
-3. A sincere direct response for situations where the person needs to set a boundary while remaining respectful.
-
-The replies must NOT sound like templates.
-
-Do not use phrases simply because they sound comforting. Make the words fit the actual conflict.
-
-Do not promise that the other person will forgive, return, understand, or change.
-
-If the user is clearly responsible for hurting someone, encourage sincere accountability and a genuine apology rather than helping them justify themselves.
-
-If the other person has behaved unfairly, do not tell the user that forgiveness requires accepting continued mistreatment. Peace can include healthy boundaries.
-
-The overall purpose is reconciliation where possible, understanding where reconciliation is not currently possible, and helping the person move forward without hatred, shame, or unnecessary guilt.
-
-Return concise, emotionally intelligent results.
+Make all replies natural, authentic, and free of artificial clichés.
 """
 
     if api_keys:
@@ -424,7 +311,7 @@ Return concise, emotionally intelligent results.
                             {"role": "user", "content": CONFLICT_ANALYZER_PROMPT}
                         ],
                         "max_tokens": 400,
-                        "temperature": 0.7
+                        "temperature": 0.75
                     }
                     resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=5)
                     if resp.status_code == 200:
@@ -476,7 +363,7 @@ Return concise, emotionally intelligent results.
         ]
     }
 
-def generate_comforting_fallback(conflict: str, religion: str, perspective: str) -> str:
+def generate_dynamic_comforting_fallback(conflict: str, religion: str, perspective: str) -> str:
     q = conflict.lower().strip()
 
     if "mistake" in q and ("god forgive" in q or "forgive me" in q):
