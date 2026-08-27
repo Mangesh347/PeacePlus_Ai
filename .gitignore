@@ -1,0 +1,5 @@
+﻿*.apk
+*.log
+.venv/
+build/
+.idea/
