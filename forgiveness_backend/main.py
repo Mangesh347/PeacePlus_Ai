@@ -40,49 +40,80 @@ async def get_forgiveness_advice(request: ConflictRequest):
     api_key = openrouter_key or openai_key
 
     if api_key:
-        try:
-            import requests
-            model = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free")
-            prompt = (
-                f"You are a compassionate PeacePlus AI Counselor.\n"
-                f"Situation: '{conflict}'\n"
-                f"Perspective: {perspective}\n"
-                f"Tradition/Framework: {religion}\n\n"
-                f"Provide advice structured with clear sections for reflection, action_steps, scripture/wisdom, and apology_draft."
-            )
+        import requests
+        prompt = (
+            f"You are a compassionate PeacePlus AI Counselor.\n"
+            f"Situation: '{conflict}'\n"
+            f"Perspective: {perspective}\n"
+            f"Tradition/Framework: {religion}\n\n"
+            f"Provide advice structured with clear sections for reflection, action_steps, scripture/wisdom, and apology_draft."
+        )
 
-            headers = {
-                "Authorization": f"Bearer {api_key}",
-                "HTTP-Referer": "https://peaceplus-ai.onrender.com",
-                "X-Title": "PeacePlus AI",
-                "Content-Type": "application/json",
-            }
-            payload = {
-                "model": model,
-                "messages": [
-                    {"role": "system", "content": "You are an empathetic peace and forgiveness counselor."},
-                    {"role": "user", "content": prompt}
-                ],
-                "max_tokens": 500,
-                "temperature": 0.7
-            }
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "HTTP-Referer": "https://peaceplus-ai.onrender.com",
+            "X-Title": "PeacePlus AI",
+            "Content-Type": "application/json",
+        }
 
-            resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=15)
-            if resp.status_code == 200:
-                res_data = resp.json()
-                raw_text = res_data['choices'][0]['message']['content']
-                return {
-                    "status": "success",
-                    "conflict": conflict,
-                    "religion": religion,
-                    "perspective": perspective,
-                    "advice": raw_text,
-                    "source": f"OpenRouter ({model})"
+        # Top 22+ Free Models on OpenRouter (auto-switches if rate limited)
+        models_to_try = [
+            os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct:free"),
+            "deepseek/deepseek-r1:free",
+            "google/gemini-2.0-flash-exp:free",
+            "qwen/qwen-2.5-72b-instruct:free",
+            "meta-llama/llama-3.1-405b-instruct:free",
+            "meta-llama/llama-3.1-70b-instruct:free",
+            "mistralai/mistral-7b-instruct:free",
+            "google/gemma-2-9b-it:free",
+            "deepseek/deepseek-r1-distill-llama-70b:free",
+            "deepseek/deepseek-chat:free",
+            "qwen/qwen-2.5-coder-32b-instruct:free",
+            "microsoft/phi-3-medium-128k-instruct:free",
+            "microsoft/phi-3-mini-128k-instruct:free",
+            "cognitivecomputations/dolphin3.0-r1-mistral-24b:free",
+            "meta-llama/llama-3.2-11b-vision-instruct:free",
+            "meta-llama/llama-3-8b-instruct:free",
+            "openchat/openchat-7b:free",
+            "gryphe/mythomax-l2-13b:free",
+            "nousresearch/hermes-3-llama-3.1-405b:free",
+            "qwen/qwen-2-7b-instruct:free",
+            "sophosympatheia/rogue-rose-103b-v0.2:free",
+            "meta-llama/llama-3.1-8b-instruct:free"
+        ]
+
+        seen = set()
+        unique_models = [m for m in models_to_try if not (m in seen or seen.add(m))]
+
+        for model in unique_models:
+            try:
+                payload = {
+                    "model": model,
+                    "messages": [
+                        {"role": "system", "content": "You are an empathetic peace and forgiveness counselor."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    "max_tokens": 500,
+                    "temperature": 0.7
                 }
-            else:
-                print(f"OpenRouter API returned status code {resp.status_code}: {resp.text}")
-        except Exception as e:
-            print(f"OpenRouter API call failed: {e}. Falling back to PeacePlus Rule Engine.")
+
+                resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=10)
+                if resp.status_code == 200:
+                    res_data = resp.json()
+                    choices = res_data.get('choices', [])
+                    if choices and 'message' in choices[0] and choices[0]['message'].get('content'):
+                        raw_text = choices[0]['message']['content']
+                        return {
+                            "status": "success",
+                            "conflict": conflict,
+                            "religion": religion,
+                            "perspective": perspective,
+                            "advice": raw_text,
+                            "source": f"OpenRouter ({model})"
+                        }
+                print(f"Model '{model}' failed (Status {resp.status_code}). Switching to next free model...")
+            except Exception as e:
+                print(f"Model '{model}' error: {e}. Switching to next free model...")
 
     # Fallback Intelligent Forgiveness Recommendation Engine
     advice_payload = generate_rule_based_advice(conflict, religion, perspective)
