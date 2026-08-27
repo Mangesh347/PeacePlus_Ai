@@ -8,7 +8,7 @@ import random
 import json
 import asyncio
 
-app = FastAPI(title="PeacePlus AI API", version="2.6.0")
+app = FastAPI(title="PeacePlus AI API", version="2.7.0")
 
 # Enable CORS for Flutter app & web clients
 app.add_middleware(
@@ -29,23 +29,21 @@ class ConflictAnalyzeRequest(BaseModel):
     perspective: Optional[str] = "Aggrieved"
 
 SYSTEM_PROMPT = """
-You are PeacePlus AI.
+You are PeacePlus AI, a deeply thoughtful, perceptive, and compassionate emotional intelligence counselor.
 
-You are a deeply compassionate, emotionally intelligent, gentle, forgiving, and supportive AI counselor.
-
-HOW YOU THINK AND ANSWER:
-1. FIRST, deeply consider the exact situation, the emotional weight, the hidden hurts, fears, doubts, or guilt behind what the person is sharing.
-2. Formulate a 100% dynamic, context-specific response tailored completely to their unique words.
-3. Never use canned templates, repetitive phrases, robotic checklists, or academic lecturing.
-4. Speak naturally, person-to-person, with profound empathy, calm reassurance, and practical wisdom.
-5. If the person is asking about forgiveness, guilt, loneliness, suffering, faith, or conflict, meet them right where they are with genuine care and realistic hope.
-6. Keep the response concise, authentic, and emotionally supportive.
+YOUR REASONING PROCESS:
+1. FIRST, deeply think about the person's exact words and emotional state.
+   - If they sent a very short prompt, greeting, or single word/letter, respond warmly, inviting them to share what is on their mind without assuming a deep crisis.
+   - If they are sharing a real conflict, guilt, heartbreak, doubt, or difficult relationship situation, understand the core human dynamic underneath.
+2. NEVER use robotic templates, canned phrases, or repetitive openers like "I hear what you are carrying".
+3. Provide a completely fresh, organic, dynamic, and thoughtful response tailored 100% to their specific words.
+4. Speak with real human warmth, validation, practical wisdom, and grounded hope.
 """
 
 @app.get("/")
 @app.get("/health")
 def health_check():
-    return {"status": "online", "service": "PeacePlus AI API", "version": "2.6.0"}
+    return {"status": "online", "service": "PeacePlus AI API", "version": "2.7.0"}
 
 @app.post("/forgiveness/stream")
 async def stream_forgiveness_advice(request: ConflictRequest):
@@ -56,11 +54,21 @@ async def stream_forgiveness_advice(request: ConflictRequest):
     if not conflict:
         raise HTTPException(status_code=400, detail="Conflict description cannot be empty.")
 
-    greetings = {"hi", "hello", "hey", "greetings", "good morning", "good evening", "good afternoon", "namaste", "hola", "hi there", "hello there"}
+    # Short inputs / greetings handling
     clean_input = conflict.lower().strip()
+    if len(clean_input) <= 2:
+        async def short_stream():
+            msg = "I am here with you. What would you like to talk about or work through today?"
+            for word in msg.split(" "):
+                yield f"data: {json.dumps({'token': word + ' '})}\n\n"
+                await asyncio.sleep(0.02)
+            yield "data: [DONE]\n\n"
+        return StreamingResponse(short_stream(), media_type="text/event-stream")
+
+    greetings = {"hi", "hello", "hey", "greetings", "good morning", "good evening", "good afternoon", "namaste", "hola", "hi there", "hello there"}
     if clean_input in greetings or (any(clean_input.startswith(g) for g in ["hi ", "hello ", "hey "]) and len(clean_input) < 15):
         async def greeting_stream():
-            greeting_msg = "Hello. I am right here with you. How are you feeling today? You can talk to me about anything on your mind."
+            greeting_msg = "Hello. I'm right here with you. How are you holding up today? You can share whatever is on your heart."
             for word in greeting_msg.split(" "):
                 yield f"data: {json.dumps({'token': word + ' '})}\n\n"
                 await asyncio.sleep(0.02)
@@ -81,30 +89,30 @@ async def stream_forgiveness_advice(request: ConflictRequest):
     api_keys = [k.strip() for k in keys_to_try if k and k.strip() and not (k.strip() in seen_keys or seen_keys.add(k.strip()))]
 
     USER_PROMPT = f"""
-First analyze the user's situation and feelings:
-User's statement: "{conflict}"
+Understand what the user is experiencing:
+User prompt: "{conflict}"
 Perspective: {perspective}
 Wisdom tradition / framework: {religion}
 
-Now, respond directly and personally to their specific situation.
-- Be completely dynamic and organic. Do NOT use any template or standard opening lines.
-- Give a warm, comforting, and authentic answer that specifically addresses the core of what they said.
-- Keep it concise, emotionally supportive, and grounded in hope.
+Instructions:
+- First think through what the user is actually asking or experiencing.
+- Respond with a completely dynamic, natural, and thoughtful answer tailored to their exact words.
+- Do NOT use generic templates or standard formulaic opening sentences.
+- Be compassionate, clear, concise, and helpful.
 """
 
-    fallback_text = generate_dynamic_comforting_fallback(conflict, religion, perspective)
+    fallback_text = generate_thoughtful_fallback(conflict, religion, perspective)
 
     async def advice_event_generator():
         stream_success = False
         if api_keys:
             import requests
             models_to_try = [
-                "meta-llama/llama-3.3-70b-instruct:free",
                 "google/gemini-2.0-flash-exp:free",
+                "meta-llama/llama-3.3-70b-instruct:free",
                 "deepseek/deepseek-chat:free",
                 "qwen/qwen-2.5-coder-32b-instruct:free",
-                "mistralai/mistral-7b-instruct:free",
-                "meta-llama/llama-3.1-8b-instruct:free"
+                "mistralai/mistral-7b-instruct:free"
             ]
 
             for key in api_keys:
@@ -130,16 +138,16 @@ Now, respond directly and personally to their specific situation.
                                     "content": USER_PROMPT
                                 }
                             ],
-                            "max_tokens": 350,
+                            "max_tokens": 400,
                             "temperature": 0.8,
                             "stream": False
                         }
-                        resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=4)
+                        resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=8)
                         if resp.status_code == 200:
                             res_data = resp.json()
                             choices = res_data.get('choices', [])
                             if choices and 'message' in choices[0] and choices[0]['message'].get('content'):
-                                text_content = choices[0]['message']['content']
+                                text_content = choices[0]['message']['content'].strip()
                                 stream_success = True
                                 for chunk in text_content.split(" "):
                                     yield f"data: {json.dumps({'token': chunk + ' '})}\n\n"
@@ -179,26 +187,26 @@ async def get_forgiveness_advice(request: ConflictRequest):
     api_keys = [k.strip() for k in keys_to_try if k and k.strip() and not (k.strip() in seen_keys or seen_keys.add(k.strip()))]
 
     USER_PROMPT = f"""
-First analyze the user's situation and feelings:
-User's statement: "{conflict}"
+Understand what the user is experiencing:
+User prompt: "{conflict}"
 Perspective: {perspective}
 Wisdom tradition / framework: {religion}
 
-Now, respond directly and personally to their specific situation.
-- Be completely dynamic and organic. Do NOT use any template or standard opening lines.
-- Give a warm, comforting, and authentic answer that specifically addresses the core of what they said.
-- Keep it concise, emotionally supportive, and grounded in hope.
+Instructions:
+- First think through what the user is actually asking or experiencing.
+- Respond with a completely dynamic, natural, and thoughtful answer tailored to their exact words.
+- Do NOT use generic templates or standard formulaic opening sentences.
+- Be compassionate, clear, concise, and helpful.
 """
 
     if api_keys:
         import requests
         models_to_try = [
-            "meta-llama/llama-3.3-70b-instruct:free",
             "google/gemini-2.0-flash-exp:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
             "deepseek/deepseek-chat:free",
             "qwen/qwen-2.5-coder-32b-instruct:free",
-            "mistralai/mistral-7b-instruct:free",
-            "meta-llama/llama-3.1-8b-instruct:free"
+            "mistralai/mistral-7b-instruct:free"
         ]
 
         for key in api_keys:
@@ -222,11 +230,11 @@ Now, respond directly and personally to their specific situation.
                                 "content": USER_PROMPT
                             }
                         ],
-                        "max_tokens": 350,
+                        "max_tokens": 400,
                         "temperature": 0.8,
                         "stream": False
                     }
-                    resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=4)
+                    resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=8)
                     if resp.status_code == 200:
                         res_data = resp.json()
                         choices = res_data.get('choices', [])
@@ -236,7 +244,7 @@ Now, respond directly and personally to their specific situation.
                                 "conflict": conflict,
                                 "religion": religion,
                                 "perspective": perspective,
-                                "advice": choices[0]['message']['content'],
+                                "advice": choices[0]['message']['content'].strip(),
                                 "source": f"OpenRouter ({model})"
                             }
                 except Exception:
@@ -247,8 +255,8 @@ Now, respond directly and personally to their specific situation.
         "conflict": conflict,
         "religion": religion,
         "perspective": perspective,
-        "advice": generate_dynamic_comforting_fallback(conflict, religion, perspective),
-        "source": "PeacePlusComfortEngine"
+        "advice": generate_thoughtful_fallback(conflict, religion, perspective),
+        "source": "PeacePlusThoughtEngine"
     }
 
 @app.post("/forgiveness/analyze-conflict")
@@ -273,26 +281,24 @@ async def analyze_conflict(request: ConflictAnalyzeRequest):
     api_keys = [k.strip() for k in keys_to_try if k and k.strip() and not (k.strip() in seen_keys or seen_keys.add(k.strip()))]
 
     CONFLICT_ANALYZER_PROMPT = f"""
-You are PeacePlus AI, a compassionate conflict and forgiveness assistant.
+You are PeacePlus AI, an emotionally perceptive conflict and forgiveness counselor.
 
-Analyze the conversation below with emotional understanding. First think about the deeper emotions, misunderstandings, and real needs behind the words.
-
-Conversation:
+Analyze this conflict transcript:
 "{transcript}"
 
-Generate three distinct, emotionally intelligent, and natural human responses:
-1. Gentle & Empathetic: Prioritizes deep emotional validation and listening.
-2. Balanced & Constructive: Acknowledges both perspectives and works toward mutual resolution.
-3. Sincere Direct Boundary: Sets a clear, respectful boundary while remaining compassionate.
+Evaluate:
+1. What each person is truly feeling underneath their words.
+2. The core misunderstanding or unmet emotional need.
+3. Suggest 3 authentic, natural human responses (Gentle, Balanced, Sincere Direct Boundary).
 
-Make all replies natural, authentic, and free of artificial clichés.
+Keep the analysis insightful, concise, and non-judgmental.
 """
 
     if api_keys:
         import requests
         models = [
-            "meta-llama/llama-3.3-70b-instruct:free",
             "google/gemini-2.0-flash-exp:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
             "deepseek/deepseek-chat:free"
         ]
         for key in api_keys:
@@ -307,13 +313,13 @@ Make all replies natural, authentic, and free of artificial clichés.
                     payload = {
                         "model": model,
                         "messages": [
-                            {"role": "system", "content": "You are PeacePlus AI, an emotionally intelligent conflict counselor."},
+                            {"role": "system", "content": "You are PeacePlus AI, an emotionally perceptive conflict counselor."},
                             {"role": "user", "content": CONFLICT_ANALYZER_PROMPT}
                         ],
                         "max_tokens": 400,
                         "temperature": 0.75
                     }
-                    resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=5)
+                    resp = requests.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload, timeout=8)
                     if resp.status_code == 200:
                         res_data = resp.json()
                         choices = res_data.get('choices', [])
@@ -363,8 +369,11 @@ Make all replies natural, authentic, and free of artificial clichés.
         ]
     }
 
-def generate_dynamic_comforting_fallback(conflict: str, religion: str, perspective: str) -> str:
+def generate_thoughtful_fallback(conflict: str, religion: str, perspective: str) -> str:
     q = conflict.lower().strip()
+
+    if len(q) <= 2:
+        return "I am here with you. What would you like to talk about or work through today?"
 
     if "mistake" in q and ("god forgive" in q or "forgive me" in q):
         return "Yes. Your mistakes do not make you unworthy of forgiveness. If you sincerely regret what you did and want to become better, you can always turn back to God. You are not your worst mistake. Start again, even if it is one small step today."
@@ -391,7 +400,7 @@ def generate_dynamic_comforting_fallback(conflict: str, religion: str, perspecti
     elif "completely alone" in q or "feel alone" in q:
         return "I'm sorry you're carrying that feeling. You don't have to pretend to be strong here. Whatever happened, you are still worthy of kindness, forgiveness, and a better tomorrow. Please don't isolate yourself completely—reach out to someone you trust and let them sit with you through this. You don't have to carry the whole weight alone."
     else:
-        return f"I hear what you are carrying regarding '{conflict}'. You don't have to have everything figured out all at once. What matters is taking one honest step toward peace, clarity, and self-compassion. I am here with you."
+        return "I am listening. Could you tell me a little more about what's going on so I can give you the best guidance and support?"
 
 if __name__ == "__main__":
     import uvicorn

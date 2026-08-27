@@ -659,7 +659,9 @@ class _ChatGPTMainScreenState extends State<ChatGPTMainScreen> {
     final q = promptText.toLowerCase().trim();
     String reply = "";
 
-    if (q.contains("mistake") && (q.contains("god forgive") || q.contains("forgive me"))) {
+    if (q.length <= 2) {
+      reply = "I am right here with you. What would you like to talk about or work through today?";
+    } else if (q.contains("mistake") && (q.contains("god forgive") || q.contains("forgive me"))) {
       reply = "Yes. Your mistakes do not make you unworthy of forgiveness. If you sincerely regret what you did and want to become better, you can always turn back to God. You are not your worst mistake. Start again, even if it is one small step today.";
     } else if (q.contains("abandoned") || (q.contains("god") && q.contains("alone"))) {
       reply = "Feeling alone does not mean you have been abandoned. Sometimes pain becomes so loud that we cannot feel hope anymore. You do not have to have everything figured out tonight. Take a breath, pray if it brings you peace, and keep going one day at a time. You still deserve love, mercy, and another beginning.";
@@ -686,7 +688,7 @@ class _ChatGPTMainScreenState extends State<ChatGPTMainScreen> {
     } else if (q == "hi" || q == "hello" || q == "hey" || q.startsWith("hi ") || q.startsWith("hello ")) {
       reply = "Hello. I am here with you. How are you holding up today? You can share whatever is on your heart freely and without judgment.";
     } else {
-      reply = "I hear the weight of what you're experiencing with '$promptText'. Please know that what you are feeling is valid, and you don't have to carry this entire burden all at once. Take one gentle breath at a time. If there is a conversation that needs to happen, speak with calm honesty and give grace where possible. You are worthy of peace and a healing path forward.";
+      reply = "I am listening closely. Tell me a bit more about what you are dealing with so we can work through it together.";
     }
 
     StringBuffer buf = StringBuffer();
