@@ -275,7 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _selectedReligion = 'General';
   String _selectedPerspective = 'Aggrieved';
   bool _isLoading = false;
-  String _apiUrl = "http://10.0.2.2:8000/forgiveness";
+  String _apiUrl = "https://peaceplus-ai.onrender.com/forgiveness";
   bool _forceOfflineMode = false;
 
   final List<Map<String, dynamic>> _traditions = [
@@ -306,7 +306,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      _apiUrl = prefs.getString('api_url') ?? "http://10.0.2.2:8000/forgiveness";
+      _apiUrl = prefs.getString('api_url') ?? "https://peaceplus-ai.onrender.com/forgiveness";
       _forceOfflineMode = prefs.getBool('offline_mode') ?? false;
     });
   }
